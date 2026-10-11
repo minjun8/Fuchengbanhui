@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>班會資訊</title>
+<meta name="theme-color" content="#7a2e2e">
+<meta name="description" content="班會資訊、道務行程、文章分享與成果分享">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="班會資訊">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+  :root { --accent: #7a2e2e; --gold: #b8892f; --bg: #faf6ef; --ink: #2b2522; --muted: #6f6560; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--accent); }
+  body { font-family: "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif; color: var(--ink); }
+  /* 讓網頁內容避開 iPhone 瀏海與底部橫條 */
+  .wrap { position: fixed; inset: 0; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    background: var(--accent); }
+  iframe { display: block; width: 100%; height: 100%; border: 0; background: var(--bg); }
+
+  .splash { position: fixed; inset: 0; z-index: 5; background: var(--accent); color: #fff;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; transition: opacity .35s; }
+  .splash img { width: 112px; height: 112px; border-radius: 26px; box-shadow: 0 8px 30px rgba(0,0,0,.25); }
+  .splash p { margin: 0; font-size: 17px; opacity: .9; }
+  .splash.hide { opacity: 0; pointer-events: none; }
+  .dots span { display: inline-block; width: 8px; height: 8px; margin: 0 4px; border-radius: 50%; background: #e8cd96; animation: b 1s infinite; }
+  .dots span:nth-child(2) { animation-delay: .15s; } .dots span:nth-child(3) { animation-delay: .3s; }
+  @keyframes b { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+
+  .notice { position: fixed; inset: 0; z-index: 6; background: var(--bg); display: none;
+    align-items: center; justify-content: center; padding: 24px; text-align: center; }
+  .notice.show { display: flex; }
+  .notice .box { max-width: 360px; }
+  .notice h2 { color: var(--accent); margin: 10px 0; font-size: 22px; }
+  .notice p { color: var(--muted); font-size: 17px; line-height: 1.7; margin: 0 0 18px; }
+  .btn { display: inline-block; font: inherit; font-size: 17px; font-weight: 700; padding: 12px 24px; border-radius: 12px;
+    border: 0; background: var(--accent); color: #fff; cursor: pointer; text-decoration: none; }
+  .btn[hidden] { display: none; }
+  .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+
+  /* 安裝提示（只在瀏覽器中打開、尚未安裝時出現） */
+  .install { position: fixed; left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 4;
+    background: #fff; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,.25); padding: 16px 16px 14px; display: none; }
+  .install.show { display: block; }
+  .install .top { display: flex; gap: 12px; align-items: center; }
+  .install img { width: 52px; height: 52px; border-radius: 12px; flex: none; }
+  .install .top b { font-size: 18px; display: block; }
+  .install .sub { color: var(--muted); font-size: 15px; }
+  .install .how { margin: 12px 0 0; font-size: 16px; line-height: 1.8; }
+  .install .how .k { display: inline-block; padding: 0 8px; border-radius: 6px; background: #f3e6e1; color: var(--accent); font-weight: 700; }
+  .install .acts { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+  .install .acts .btn { padding: 10px 18px; font-size: 16px; }
+</style>
+</head>
+<body>
+
+<div class="wrap"><iframe id="app" title="班會資訊" allow="autoplay; fullscreen; clipboard-write" allowfullscreen></iframe></div>
+
+<div class="splash" id="splash">
+  <img src="icon-192.png" alt="">
+  <p>班會資訊平台</p>
+  <div class="dots"><span></span><span></span><span></span></div>
+</div>
+
+<div class="notice" id="offline">
+  <div class="box">
+    <div style="font-size:46px">📶</div>
+    <h2>目前沒有網路</h2>
+    <p>班會資訊需要連上網路才能看到最新內容，請確認 Wi-Fi 或行動網路後再試一次。</p>
+    <button class="btn" onclick="location.reload()">重新整理</button>
+  </div>
+</div>
+
+<div class="install" id="install">
+  <div class="top">
+    <img src="icon-192.png" alt="">
+    <div><b>把「班會資訊」加到手機桌面</b><span class="sub">之後像 App 一樣，點圖示就能打開</span></div>
+  </div>
+  <div class="how" id="installHow"></div>
+  <div class="acts">
+    <button class="btn ghost" id="installLater">以後再說</button>
+    <button class="btn" id="installBtn" hidden>安裝</button>
+  </div>
+</div>
+
+<script>
+  /* ============================================================
+     設定：把下面這行換成「班會資訊平台」部署後的網址（/exec 結尾）
+     ============================================================ */
+  var APP_URL = 'https://github.com/minjun8/Fuchengbanhui.git';
+
+  var frame = document.getElementById('app');
+  var splash = document.getElementById('splash');
+
+  function hideSplash() { splash.classList.add('hide'); setTimeout(function () { splash.style.display = 'none'; }, 400); }
+
+  if (/請貼上/.test(APP_URL)) {
+    // 還沒設定網址
+    splash.style.display = 'none';
+    var n = document.getElementById('offline');
+    n.querySelector('h2').textContent = '尚未設定網址';
+    n.querySelector('p').textContent = '請在 index.html 最下方的 APP_URL 貼上班會資訊平台的部署網址。';
+    n.querySelector('.btn').style.display = 'none';
+    n.classList.add('show');
+  } else if (!navigator.onLine) {
+    splash.style.display = 'none';
+    document.getElementById('offline').classList.add('show');
+  } else {
+    frame.addEventListener('load', hideSplash);
+    setTimeout(hideSplash, 12000); // 網路很慢時也不要一直卡在啟動畫面
+    frame.src = APP_URL;
+  }
+  window.addEventListener('online', function () { document.getElementById('offline').classList.remove('show'); });
+
+  /* ---------- 離線時也能打開外殼（顯示「沒有網路」） ---------- */
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+  }
+
+  /* ---------- 安裝提示 ---------- */
+  (function () {
+    var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (standalone) return; // 已經是安裝後的 App
+    var dismissed = false;
+    try { dismissed = Date.now() - Number(localStorage.getItem('installLater') || 0) < 7 * 86400000; } catch (e) {}
+    if (dismissed) return;
+
+    var box = document.getElementById('install'), how = document.getElementById('installHow'), btn = document.getElementById('installBtn');
+    var ua = navigator.userAgent;
+    var isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    var inLine = /Line\//i.test(ua), inFB = /FBAN|FBAV/i.test(ua);
+    var deferred = null;
+
+    function show() { setTimeout(function () { box.classList.add('show'); }, 2500); }
+
+    if (inLine || inFB) {
+      how.innerHTML = '請先按右上角 <span class="k">⋯</span> 或 <span class="k">⋮</span>，選擇「<b>用瀏覽器開啟</b>」，再依照畫面提示加到桌面。';
+      show();
+    } else if (isIOS) {
+      how.innerHTML = '① 用 <b>Safari</b> 打開這個網頁<br>② 按下方的分享按鈕 <span class="k">⬆︎</span><br>③ 往下滑，選「<b>加入主畫面</b>」，再按「新增」';
+      show();
+    } else {
+      window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault(); deferred = e;
+        how.innerHTML = '按下「安裝」，桌面就會出現「班會資訊」的圖示。';
+        btn.hidden = false; box.classList.add('show');
+      });
+      // 有些瀏覽器不支援一鍵安裝，改顯示手動步驟
+      setTimeout(function () {
+        if (deferred || box.classList.contains('show')) return;
+        how.innerHTML = '按瀏覽器右上角的 <span class="k">⋮</span>，選「<b>加到主畫面</b>」或「<b>安裝應用程式</b>」。';
+        box.classList.add('show');
+      }, 6000);
+    }
+    btn.onclick = function () {
+      if (!deferred) return;
+      deferred.prompt();
+      deferred.userChoice.finally(function () { deferred = null; box.classList.remove('show'); });
+    };
+    document.getElementById('installLater').onclick = function () {
+      box.classList.remove('show');
+      try { localStorage.setItem('installLater', String(Date.now())); } catch (e) {}
+    };
+    window.addEventListener('appinstalled', function () { box.classList.remove('show'); });
+  })();
+</script>
+</body>
+</html>

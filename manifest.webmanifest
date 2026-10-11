@@ -1,0 +1,17 @@
+{
+  "name": "班會資訊平台",
+  "short_name": "班會資訊",
+  "description": "班會資訊、道務行程、文章分享與成果分享",
+  "lang": "zh-Hant",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#7a2e2e",
+  "theme_color": "#7a2e2e",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
