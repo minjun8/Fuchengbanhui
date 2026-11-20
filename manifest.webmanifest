@@ -1,7 +1,7 @@
 {
-  "name": "班會資訊平台",
-  "short_name": "班會資訊",
-  "description": "班會資訊、道務行程、文章分享與成果分享",
+  "name": "道務工作整合網站",
+  "short_name": "道務工作整合",
+  "description": "參班填報、講師填報、文章分享與成果分享",
   "lang": "zh-Hant",
   "start_url": "./",
   "scope": "./",
